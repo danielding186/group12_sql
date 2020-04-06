@@ -1,4 +1,4 @@
--- 2020-4-5: 4.25pm Shujin Li
+
 use Group12_Projects;
 drop database Group12_Project;
 
