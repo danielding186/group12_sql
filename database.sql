@@ -253,15 +253,19 @@ END
 --Add meida
 Declare @Counter int = 1;
 Declare @UserId int;
+Declare @LocationId int;
+Declare @MediaCountId int;
 
 while @Counter <= 30 BEGIN
-	Declare @CounterStr varchar(20) = cast(@Counter as varchar);
+    Declare @CounterStr varchar(20) = cast(@Counter as varchar);
     Declare @rdate DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2018-01-01');
-    SELECT @UserId = u2.user_id FROM Users u2 t WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    SELECT @UserId = u2.user_id FROM Users u2 WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    SELECT @LocationId = l.location_id FROM Location l WHERE l.location_id = Cast(RAND()*(12-1)+1 as int);
+    SELECT @MediaCountId = mc.media_count_id FROM MediaCount mc WHERE mc.media_count_id  = Cast(RAND()*(12-1)+1 as int);
     INSERT INTO Media VALUES
     (@rdate, 
-           ,
-    'text' +  @CounterStr,
+      @MediaCountId,
+    'text',@LocationId,
     @UserId);
 
     SET @Counter += 1;
@@ -318,138 +322,71 @@ END
    
    
    
----------------------------------
-INSERT  Location (
-   latitude,
-   longtitude,
-   address,
-   name
-)
- VALUES 
-( '73','23','213 pontius','zyl'),
- ( '78','23','213 pontius','zs'),
- ( '70','23','213 pontius','dl'),
- ( '71','23','213 pontius','fh'),
-( '80','33','213 pontius','xf'),
- ( '93','23','213 pontius','yy'),
- ( '33','23','213 pontius','lzh'),
- ('53','43','213 pontius','zx'),
- ( '63','23','213 pontius','sfc'),
-( '23','23','213 pontius','hzy');
+
+--Location
+Declare @Counter int = 1;
+while @Counter <= 10 
+BEGIN
+	Declare @LatitudeStr varchar(20) = cast(@Counter as varchar);
+	Declare @LongtitudeStr varchar(20) = cast(@Counter as varchar);
+    INSERT INTO Location VALUES( @LatitudeStr, @LongtitudeStr,'123pontius','sz');
+    SET @Counter += 1;
+END
+
+--MediaCount
+
+Declare @Counter int = 1;
+while @Counter <= 10 
+BEGIN
+    INSERT INTO MediaCount VALUES(@Counter,@Counter,@Counter );
+    SET @Counter += 1;
+END
+
+--Likes
+Declare @Counter int = 1;
+Declare @UserId int;
+Declare @MediaId int;
+
+while @Counter <= 10 BEGIN
+	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+	SELECT @UserId = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    Declare @Ctime DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
+	INSERT  Into Likes VALUES
+	(@UserId, @MediaId,@Ctime);
+	SET @Counter += 1;
+END
+
+--Comments
 
 
-INSERT MediaCount (
-   
-   like_counts,
-   view_counts,
-   commnet_counts
-)
- VALUES (1,2,4),
-(6,32,12),
- (12,54,77),
-(3,66,44),
-(12,45,32),
-(3,1,7),
- (6,8,9),
- (22,55,99),
- (20,10,19),
- (12,23,65);
+Declare @Counter int = 1;
+Declare @UserId int;
+Declare @MediaId int;
+
+while @Counter <= 10 BEGIN
+	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+	SELECT @UserId = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    Declare @Ctime DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
+	INSERT  Into Comments VALUES
+	(@UserId, @MediaId,'text',@Ctime);
+	SET @Counter += 1;
+END
 
 
-INSERT INTO Media (
-    create_time,
-    media_count_id,
-    text,
-    location_id,
-    user_id
-)
-VALUES
-    ('20180601',1,'post1 user1',1,5),
-    ('20180602',2,'post1 user1',2,2),
-    ('20180603',3,'post1 user3',3,3),
-    ('20180604',4,'post1 user4',4,4),
-    ('20180605', 5,'post1 user5',1,6),
-    ('20180606', 6,'post1 user6',1,7),
-    ('20180607', 7,'post1 user7',1,8),
-    ('20180608', 8,'post1 user8',1,2),
-    ('20180609', 9,'post1 user9',1,2),
-    ('20180611', 10,'post1 user10',1,2),
-    ('20180612', 11,'post1 user11',1,2),
-    ('20180613', 12,'post1 user12',1,2),
-    ('20180614', 13,'post1 user13',1,2),
-    ('20180615', 14,'post1 user14',1,2),
-    ('20180616', 15,'post1 user15',1,2),
-    ('20180617', 16,'post1 user16',1,3),
-    ('20180618', 17,'post1 user17',1,4),
-    ('20180619', 18,'post1 user18',1,7),
-    ('20180620', 19,'post1 user19',1,6),
-    ('20180621', 20,'post1 user21',1,4),
-    ('20180622', 1,'post2 user1',1,2),
-    ('20180623', 14,'post2 user14',1,4),
-    ('20180624', 18,'post2 user18',1,4)
-    ;
+--Views
 
-   
+Declare @Counter int = 1;
+Declare @UserId int;
+Declare @MediaId int;
 
-
-INSERT  Likes (
-
-   user_id,
-  media_id,
- created_time
-)
- VALUES (1,1,'8'),
-(2,2,'28'),
- (3,3,'49'),
-(4,4,'28'),
-(5,5,'34'),
-(6,6,'54'),
- (7,7,'8'),
- (8,8,'18'),
-(9,9,'27'),
- (10,10,'8');
-
-
-
-INSERT  Comments (
-
-   user_id,
-  media_id,
- comment_text,
- created_time
-)
- VALUES (1,1,'lzy','8'),
-        (2,2,'liu','28'),
-        (3,3,'liu','49'),
-        (4,4,'liu','28'),
-        (5,5,'liu','34'),
-        (6,6,'liu','54'),
-        (7,7,'liu','8'),
-        (8,8,'liu', '34'),
-        (9,9,'liu','27'),
-        (10,10,'liu','8');
-
-
-
-
-
-INSERT  Views (
-
-   user_id,
-  media_id,
- created_time
-)
- VALUES (1,1,'8'),
-(2,2,'28'),
- (3,3,'49'),
-(4,4,'28'),
-(5,5,'34'),
-(6,6,'54'),
- (7,7,'8'),
- (8,8,'18'),
-(9,9,'27'),
- (10,10,'8');
-
+while @Counter <= 10 BEGIN
+	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+	SELECT @UserId = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    Declare @Ctime DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
+	INSERT  Into Views VALUES
+	(@UserId, @MediaId,@Ctime);
+	SET @Counter += 1;
+END
 
 SELECT top 3 username, convert(varchar, DecryptByKey(encryptedPassword)) as 'Password' from Users;
 
