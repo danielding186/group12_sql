@@ -85,15 +85,41 @@ CLOSE SYMMETRIC KEY Group12_SymmetricKey;
 -- DROP MASTER KEY;
 
 --Location
+use Group12_Project;
+drop table #LocationSample;
+CREATE TABLE #LocationSample (
+    loc_id int IDENTITY primary Key, 
+    cityName varchar(30) not NULL,
+    latitude varchar(30) not null,
+    longtitude varchar(30) not NULL);
+Insert into #LocationSample
+ values('New york', '40.670', '-73.940'), ('Los angeles', '34.110', '-118.410'),
+  ('Chicago', '41.840', '-87.680'), ('Houston', '29.770', '-95.390'),
+  ('Philadelphia', '40.010', '-75.130'), ('Phoenix', '33.540', '-112.070'),
+  ('San diego', '32.810', '-117.140'), ('San antonio', '29.460', '-98.510'),
+  ('Dallas', '32.790', '-96.770'), ('Detroit', '42.380', '-83.100'),
+  ('San jose', '37.300', '-121.850'), ('Jacksonville', '30.330', '-81.660'),
+  ('Indianapolis', '39.780', '-86.150'), ('San francisco', '37.770', '-122.450'),
+  ('Columbus', '39.990', '-82.990'), ('Austin', '30.310', '-97.750'),
+  ('Memphis', '35.110', '-90.010'), ('Baltimore', '39.300', '-76.610'),
+  ('Fort worth', '32.750', '-97.340'), ('El paso', '31.850', '-106.440'),
+  ('Charlotte', '35.200', '-80.830'), ('Milwaukee', '43.060', '-87.970'),
+  ('Boston', '42.340', '-71.020'), ('Seattle', '47.620', '-122.350'),
+  ('Denver', '39.770', '-104.870'), ('Washington', '38.910', '-77.020');
+
 Declare @CounterLocation int = 1;
-while @CounterLocation <= 100 
+Declare @totalLocation int = (select count(*) from #LocationSample);
+while @CounterLocation <= @totalLocation 
 BEGIN
-	Declare @LatitudeStr varchar(20) = cast(@CounterLocation as varchar);
-	Declare @LongtitudeStr varchar(20) = cast(@CounterLocation as varchar);
-    INSERT INTO Location VALUES( @LatitudeStr, @LongtitudeStr,'123pontius','sz');
+	Declare @LatitudeStr varchar(20) = (select latitude from #LocationSample where loc_id = cast(@CounterLocation as varchar));
+	Declare @LongtitudeStr varchar(20) = (select longtitude from #LocationSample where loc_id = cast(@CounterLocation as varchar));
+    Declare @CityStr varchar(20) = (select cityName from #LocationSample where loc_id = cast(@CounterLocation as varchar));
+    
+    INSERT INTO Location VALUES( @LatitudeStr, @LongtitudeStr,'123pontius', @CityStr);
     SET @CounterLocation += 1;
 END
 
+drop table #LocationSample;
 
 --Add meida
 Declare @CounterM int = 1;
