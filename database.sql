@@ -9,10 +9,10 @@
 --DROP TABLE Likes 
 --DROP TABLE Views 
 --DROP TABLE UserSettings 
+--DROP TABLE MediaCount
 --DROP TABLE Media
 --DROP TABLE Users 
 --DROP TABLE Location 
---DROP TABLE MediaCount 
 
 use Group12_Projects;
 drop database Group12_Project;
@@ -67,23 +67,23 @@ CREATE TABLE Location(
    name varchar(10) 
 )
 
-CREATE TABLE MediaCount(
-   media_count_id  int primary key IDENTITY(1,1),
-   like_counts int NOT NULL,
-   view_counts int NOT NULL,
-   commnet_counts int NOT NULL
-)
 
 CREATE TABLE Media
 (	media_id INT PRIMARY KEY IDENTITY (1, 1),
     create_time DATETIME NOT NULL,
-    media_count_id INT NOT NULL,
     text VARCHAR(50),
     location_id INT,
     user_id INT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES Users (user_id),
-    FOREIGN KEY (location_id) REFERENCES Location (location_id),
-    FOREIGN KEY (media_count_id) REFERENCES MediaCount (media_count_id)
+    FOREIGN KEY (location_id) REFERENCES Location (location_id)
+)
+CREATE TABLE MediaCount(
+   media_count_id  int primary key IDENTITY(1,1),
+   media_id INT NOT NULL,
+   --like_counts int NOT NULL,
+   --view_counts int NOT NULL,
+   --commnet_counts int NOT NULL
+ FOREIGN KEY (media_id) REFERENCES Media (media_id)
 )
 
 CREATE TABLE Photo
@@ -193,6 +193,54 @@ END
 
 go
 
+DROP FUNCTION fn_CalcLikes;
+CREATE FUNCTION fn_CalcLikes(@Media_Id INT)
+RETURNS INT
+AS
+   BEGIN
+      DECLARE @total int =
+         (SELECT Count(like_id)
+          FROM Likes
+          WHERE  media_id = @Media_Id);
+      SET @total = ISNULL(@total, 0);
+      RETURN @total;
+END
+
+go
+
+DROP FUNCTION fn_CalcComments;
+CREATE FUNCTION fn_CalcComments(@Media_Id INT)
+RETURNS INT
+AS
+   BEGIN
+      DECLARE @total int =
+         (SELECT Count(c.comment_id )
+          FROM Comments c 
+          WHERE  media_id = @Media_Id);
+      SET @total = ISNULL(@total, 0);
+      RETURN @total;
+END
+
+go
+
+DROP FUNCTION fn_CalcViews;
+CREATE FUNCTION fn_CalcViews(@Media_Id INT)
+RETURNS INT
+AS
+   BEGIN
+      DECLARE @total int =
+         (SELECT Count(v.views_id )
+          FROM Views v 
+          WHERE  media_id = @Media_Id);
+      SET @total = ISNULL(@total, 0);
+      RETURN @total;
+END
+
+go
+
+Alter table MediaCount Add like_counts AS (dbo.fn_CalcLikes(media_id));
+Alter table MediaCount Add comment_counts AS (dbo.fn_CalcComments(media_id));
+Alter table MediaCount Add view_counts AS (dbo.fn_CalcViews(media_id));
 Alter table UserCount Add followers_counts AS (dbo.fn_CalcFollowers(user_id));
 Alter table UserCount Add following_counts AS (dbo.fn_CalcFollowing(user_id));
 Alter table UserCount Add media_counts As(dbo.fn_CalcMediaCount(user_id));
@@ -274,34 +322,34 @@ BEGIN
     SET @CounterLocation += 1;
 END
 
---MediaCount
-
-Declare @CounterMC int = 1;
-while @CounterMC <= 30 
-BEGIN
-    INSERT INTO MediaCount VALUES(@CounterMC,@CounterMC,@CounterMC );
-    SET @CounterMC += 1;
-END 
 
 --Add meida
 Declare @CounterM int = 1;
 Declare @UserIdM int;
 Declare @LocationIdM int;
-Declare @MediaCountIdM int;
 
 while @CounterM <= 30 BEGIN
     Declare @CounterStrM varchar(20) = cast(@CounterM as varchar);
     Declare @rdateM DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2018-01-01');
     SELECT @UserIdM = u2.user_id FROM Users u2 WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
     SELECT @LocationIdM = l.location_id FROM Location l WHERE l.location_id = Cast(RAND()*(12-1)+1 as int);
-    SELECT @MediaCountIdM = mc.media_count_id FROM MediaCount mc WHERE mc.media_count_id  = @CounterM;
     INSERT INTO Media VALUES
     (@rdateM, 
-      @MediaCountIdM,
     'text',@LocationIdM,
     @UserIdM);
 
     SET @CounterM += 1;
+END 
+--MediaCount
+
+Declare @CounterMC int = 1;
+Declare @MediaId int;
+
+while @CounterMC <= 30 BEGIN
+    SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
+    INSERT INTO MediaCount VALUES
+    (@MediaId);
+    SET @CounterMC += 1;
 END 
 
 --Add Tags
@@ -320,7 +368,7 @@ Declare @MediaIdMT int;
 
 while @cntMT <= 10 BEGIN
 	SELECT @TagIdMT = t.tag_id FROM Tags t WHERE t.tag_id = Cast(RAND()*(15-1)+1 as int);
-	SELECT @MediaIdMT =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
+	SELECT @MediaIdMT =m2.media_id FROM Media m2 WHERE m2.media_id = Cast(RAND()*(30-1)+1 as int);
 	INSERT INTO Media_Tags VALUES
     (@TagIdMT, @MediaIdMT);
 	SET @cntMT += 1;
@@ -370,7 +418,7 @@ Declare @CounterLike int = 1;
 Declare @UserIdLike int;
 Declare @MediaIdLike int;
 
-while @CounterLike <= 10 BEGIN
+while @CounterLike <= 30 BEGIN
 	SELECT @MediaIdLike =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
 	SELECT @UserIdLike = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
     Declare @CtimeLike DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
@@ -384,7 +432,7 @@ Declare @CounterCom int = 1;
 Declare @UserIdCom int;
 Declare @MediaIdCom int;
 
-while @CounterCom <= 10 BEGIN
+while @CounterCom <= 30 BEGIN
 	SELECT @MediaIdCom =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
 	SELECT @UserIdCom = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
     Declare @CtimeCom DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
@@ -399,7 +447,7 @@ Declare @CounterView int = 1;
 Declare @UserIdView int;
 Declare @MediaIdView int;
 
-while @CounterView <= 10 BEGIN
+while @CounterView <= 30 BEGIN
 	SELECT @MediaIdView =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
 	SELECT @UserIdView = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
     Declare @CtimeView DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
