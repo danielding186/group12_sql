@@ -1,28 +1,21 @@
---DROP TABLE Video 
---DROP TABLE Photo 
---DROP TABLE Media_Tags 
---DROP TABLE Tags 
---DROP TABLE FollowInfo 
---DROP TABLE BlockInfo 
---DROP TABLE UserCount 
---DROP TABLE Comments 
---DROP TABLE Likes 
---DROP TABLE Views 
---DROP TABLE UserSettings 
---DROP TABLE MediaCount
---DROP TABLE Media
---DROP TABLE Users 
---DROP TABLE Location 
-
-use Group12_Projects;
-drop database Group12_Project;
-
-create database Group12_Project;
-go
+DROP TABLE Video 
+DROP TABLE Photo 
+DROP TABLE Media_Tags 
+DROP TABLE Tags 
+DROP TABLE FollowInfo 
+DROP TABLE BlockInfo 
+DROP TABLE UserCount 
+DROP TABLE Comments 
+DROP TABLE Likes 
+DROP TABLE Views 
+DROP TABLE UserSettings 
+DROP TABLE MediaCount
+DROP TABLE Media
+DROP TABLE Users 
+DROP TABLE Location
 
 use Group12_Project;
 GO
- 
 
 create table Users(
     user_id int IDENTITY primary Key,
@@ -148,7 +141,6 @@ FOREIGN KEY(media_id) REFERENCES Media(media_id)
 
 
 --- Create Computed Columns with functions
-Go
 
 CREATE FUNCTION fn_CalcMediaCount(@UserId INT)
 RETURNS INT
@@ -162,9 +154,6 @@ AS
       RETURN @total;
 END
 
-
-GO
-
 CREATE FUNCTION fn_CalcFollowers(@UserId INT)
 RETURNS INT
 AS
@@ -177,7 +166,6 @@ AS
       RETURN @total;
 END
 
-go
 
 CREATE FUNCTION fn_CalcFollowing(@UserId INT)
 RETURNS INT
@@ -191,7 +179,6 @@ AS
       RETURN @total;
 END
 
-go
 
 DROP FUNCTION fn_CalcLikes;
 CREATE FUNCTION fn_CalcLikes(@Media_Id INT)
@@ -206,7 +193,6 @@ AS
       RETURN @total;
 END
 
-go
 
 DROP FUNCTION fn_CalcComments;
 CREATE FUNCTION fn_CalcComments(@Media_Id INT)
@@ -221,7 +207,6 @@ AS
       RETURN @total;
 END
 
-go
 
 DROP FUNCTION fn_CalcViews;
 CREATE FUNCTION fn_CalcViews(@Media_Id INT)
@@ -236,7 +221,6 @@ AS
       RETURN @total;
 END
 
-go
 
 Alter table MediaCount Add like_counts AS (dbo.fn_CalcLikes(media_id));
 Alter table MediaCount Add comment_counts AS (dbo.fn_CalcComments(media_id));
@@ -244,9 +228,9 @@ Alter table MediaCount Add view_counts AS (dbo.fn_CalcViews(media_id));
 Alter table UserCount Add followers_counts AS (dbo.fn_CalcFollowers(user_id));
 Alter table UserCount Add following_counts AS (dbo.fn_CalcFollowing(user_id));
 Alter table UserCount Add media_counts As(dbo.fn_CalcMediaCount(user_id));
-go
 
-
+SELECT *
+FROM Users
 -- Use Table-Level CHECK Constraint to implement business rules
 
 CREATE FUNCTION CheckBlockInfo (@UserId varchar(30))
@@ -260,12 +244,9 @@ BEGIN
    RETURN @Count;
 END;
 
-go
 
 ALTER TABLE Media ADD CONSTRAINT BanBlockUsers CHECK (dbo.CheckBlockInfo(user_id) < 10);
 
-
-go
 
 --- encrypt
 CREATE MASTER KEY
@@ -284,6 +265,8 @@ ENCRYPTION BY CERTIFICATE Group12Certificate;
 OPEN SYMMETRIC KEY Group12SymmetricKey
 DECRYPTION BY CERTIFICATE Group12Certificate;
 
+SELECT *
+FROM MediaCount
 
 -- Add Users, FollowInfo & BlockInfo
 Declare @CounterUser int = 1;
@@ -340,13 +323,13 @@ while @CounterM <= 30 BEGIN
 
     SET @CounterM += 1;
 END 
---MediaCount
 
+--MediaCount
 Declare @CounterMC int = 1;
 Declare @MediaId int;
 
 while @CounterMC <= 30 BEGIN
-    SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
+    SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = @CounterMC;
     INSERT INTO MediaCount VALUES
     (@MediaId);
     SET @CounterMC += 1;
@@ -378,8 +361,8 @@ END
 Declare @cntP int = 1;
 Declare @MediaIdP int;
 
-while @cntP <= 10 BEGIN
-	SELECT @MediaIdP =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(15-1)+1 as int);
+while @cntP <= 15 BEGIN
+	SELECT @MediaIdP =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
 	IF EXISTS (SELECT p.media_id FROM Photo p WHERE p.media_id = @MediaIdP) 
 	BEGIN
 		SET @cntP += 1;
@@ -397,9 +380,13 @@ END
 Declare @cntV int = 1;
 Declare @MediaIdV int;
 
-while @cntV <= 10 BEGIN
-	SELECT @MediaIdV =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-16)+16 as int);
+while @cntV <= 30 BEGIN
+	SELECT @MediaIdV =m.media_id FROM Media m WHERE m.media_id = @cntV;
 	IF EXISTS (SELECT v.media_id FROM Video v WHERE v.media_id = @MediaIdV) 
+	BEGIN
+		SET @cntV += 1;
+	END
+	ELSE IF EXISTS(SELECT p.media_id FROM Photo p WHERE p.media_id = @cntV)
 	BEGIN
 		SET @cntV += 1;
 	END
@@ -418,8 +405,8 @@ Declare @CounterLike int = 1;
 Declare @UserIdLike int;
 Declare @MediaIdLike int;
 
-while @CounterLike <= 30 BEGIN
-	SELECT @MediaIdLike =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+while @CounterLike <= 40 BEGIN
+	SELECT @MediaIdLike =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
 	SELECT @UserIdLike = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
     Declare @CtimeLike DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Likes VALUES
@@ -432,8 +419,8 @@ Declare @CounterCom int = 1;
 Declare @UserIdCom int;
 Declare @MediaIdCom int;
 
-while @CounterCom <= 30 BEGIN
-	SELECT @MediaIdCom =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+while @CounterCom <= 40 BEGIN
+	SELECT @MediaIdCom =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
 	SELECT @UserIdCom = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
     Declare @CtimeCom DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Comments VALUES
@@ -447,14 +434,31 @@ Declare @CounterView int = 1;
 Declare @UserIdView int;
 Declare @MediaIdView int;
 
-while @CounterView <= 30 BEGIN
-	SELECT @MediaIdView =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+while @CounterView <= 40 BEGIN
+	SELECT @MediaIdView =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
 	SELECT @UserIdView = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
     Declare @CtimeView DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Views VALUES
 	(@UserIdView, @MediaIdView,@CtimeView);
 	SET @CounterView += 1;
 END
+
+SELECT *
+FROM Media 
+SELECT *
+FROM MediaCount
+SELECT *
+FROM Comments 
+
+SELECT *
+FROM Photo 
+SELECT *
+FROM Video
+
+SELECT *
+FROM Tags
+SELECT *
+FROM Media_Tags 
 
 
 SELECT top 3 username, convert(varchar, DecryptByKey(encryptedPassword)) as 'Password' from Users;
