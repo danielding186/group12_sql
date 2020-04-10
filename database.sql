@@ -1,18 +1,27 @@
-DROP TABLE Video 
-DROP TABLE Photo 
-DROP TABLE Media_Tags 
-DROP TABLE Tags 
-DROP TABLE FollowInfo 
-DROP TABLE BlockInfo 
-DROP TABLE UserCount 
-DROP TABLE Comments 
-DROP TABLE Likes 
-DROP TABLE Views 
-DROP TABLE UserSettings 
-DROP TABLE Media
-DROP TABLE Users 
-DROP TABLE Location 
-DROP TABLE MediaCount 
+--DROP TABLE Video 
+--DROP TABLE Photo 
+--DROP TABLE Media_Tags 
+--DROP TABLE Tags 
+--DROP TABLE FollowInfo 
+--DROP TABLE BlockInfo 
+--DROP TABLE UserCount 
+--DROP TABLE Comments 
+--DROP TABLE Likes 
+--DROP TABLE Views 
+--DROP TABLE UserSettings 
+--DROP TABLE Media
+--DROP TABLE Users 
+--DROP TABLE Location 
+--DROP TABLE MediaCount 
+
+use Group12_Projects;
+drop database Group12_Project;
+
+create database Group12_Project;
+go
+
+use Group12_Project;
+GO
  
 
 create table Users(
