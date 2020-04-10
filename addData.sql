@@ -22,21 +22,22 @@ SET NOCOUNT On
 CREATE MASTER KEY
 ENCRYPTION BY PASSWORD = 'as#21ef2!werxwer02921s23987hx';
 
-CREATE CERTIFICATE Group12Certificate
+CREATE CERTIFICATE Group12_Certificate
 WITH SUBJECT = 'Database group 12 project demo',
 EXPIRY_DATE = '2030-1-31';
 
 -- Create symmetric key to encrypt data
-CREATE SYMMETRIC KEY Group12SymmetricKey
+CREATE SYMMETRIC KEY Group12_SymmetricKey
 WITH ALGORITHM = AES_128
-ENCRYPTION BY CERTIFICATE Group12Certificate;
+ENCRYPTION BY CERTIFICATE Group12_Certificate;
 
 -- Open symmetric key
-OPEN SYMMETRIC KEY Group12SymmetricKey
-DECRYPTION BY CERTIFICATE Group12Certificate;
+OPEN SYMMETRIC KEY Group12_SymmetricKey
+DECRYPTION BY CERTIFICATE Group12_Certificate;
 
 -- Add Users, FollowInfo & BlockInfo
 Declare @CounterUser int = 1;
+Declare @minUserID int = -1;
 
 while @CounterUser <= 10 BEGIN
     Declare @CounterStrU varchar(20) = cast(@CounterUser as varchar);
@@ -47,6 +48,8 @@ while @CounterUser <= 10 BEGIN
     'password' +  @CounterStrU));
 
     DECLARE @UserIdU int = SCOPE_IDENTITY()
+    if (@minUserID = -1)
+        set @minUserID = @UserIdU;
 
     INSERT INTO UserCount VALUES(@UserIdU);
     INSERT INTO UserSettings VALUES(@UserIdU, 1, 0);
@@ -59,10 +62,10 @@ while @CounterUser <= 10 BEGIN
     END
 
     if (@CounterUser < 20 and @CounterUser != 1)
-        Insert Into BlockInfo Values(@UserIdU, 1);
+        Insert Into BlockInfo Values(@UserIdU, @minUserID);
 
     Declare @UserBlocker int = 0;
-    if (rand() < 1) BEGIN
+    if (rand() < 0.05) BEGIN
         set @UserBlocker = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
         if (@UserBlocker != @UserIdU) and not exists (Select * from BlockInfo where user_id = @UserIdU and fieldblocker_id = @UserBlocker)
             Insert into BlockInfo Values(@UserIdU, @UserBlocker);
@@ -72,8 +75,8 @@ while @CounterUser <= 10 BEGIN
     SET @CounterUser += 1;
 END
 
-CLOSE SYMMETRIC KEY Group12SymmetricKey;
-DROP SYMMETRIC KEY Group12Certificate;
+CLOSE SYMMETRIC KEY Group12_SymmetricKey;
+DROP SYMMETRIC KEY Group12_Certificate;
 DROP CERTIFICATE Group12Certificate;
 DROP MASTER KEY;
 
@@ -134,8 +137,8 @@ Declare @MediaIdMT int;
 while @cntMT <= 100 BEGIN
 	SELECT @TagIdMT = (SELECT TOP 1 tag_id FROM [Tags] ORDER BY NEWID());
 	SELECT @MediaIdMT = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
-	INSERT INTO Media_Tags VALUES
-    (@TagIdMT, @MediaIdMT);
+    if not exists (select * from Media_Tags where media_id = @MediaIdMT and tag_id = @TagIdMT)
+	    INSERT INTO Media_Tags VALUES (@TagIdMT, @MediaIdMT);
 	SET @cntMT += 1;
 END
 
