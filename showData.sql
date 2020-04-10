@@ -24,12 +24,16 @@ SELECT top 3 username, convert(varchar, DecryptByKey(encryptedPassword)) as 'Pas
 
 CLOSE SYMMETRIC KEY Group12_SymmetricKey;
 
-select * from UserCount;
+select count(*) from UserCount;
 
 select count(*) from FollowInfo;
 
-select * from BlockInfo;
+select count(*) from BlockInfo;
+
+select count(*) from Media;
 
 select dbo.CheckBlockInfo(1) as blocker;
+
+select top 10 * from MediaCount order by like_counts desc;
 
 go
