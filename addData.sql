@@ -19,17 +19,19 @@ delete from Users;
 
 SET NOCOUNT On
 --- encrypt
-CREATE MASTER KEY
-ENCRYPTION BY PASSWORD = 'as#21ef2!werxwer02921s23987hx';
+if not exists (SELECT name FROM sys. symmetric_keys where name = 'Group12_SymmetricKey') BEGIN
+    CREATE MASTER KEY
+    ENCRYPTION BY PASSWORD = 'as#21ef2!werxwer02921s23987hx';
 
-CREATE CERTIFICATE Group12_Certificate
-WITH SUBJECT = 'Database group 12 project demo',
-EXPIRY_DATE = '2030-1-31';
+    CREATE CERTIFICATE Group12_Certificate
+    WITH SUBJECT = 'Database group 12 project demo',
+    EXPIRY_DATE = '2030-1-31';
 
--- Create symmetric key to encrypt data
-CREATE SYMMETRIC KEY Group12_SymmetricKey
-WITH ALGORITHM = AES_128
-ENCRYPTION BY CERTIFICATE Group12_Certificate;
+    -- Create symmetric key to encrypt data
+    CREATE SYMMETRIC KEY Group12_SymmetricKey
+    WITH ALGORITHM = AES_128
+    ENCRYPTION BY CERTIFICATE Group12_Certificate;
+END
 
 -- Open symmetric key
 OPEN SYMMETRIC KEY Group12_SymmetricKey
@@ -39,12 +41,12 @@ DECRYPTION BY CERTIFICATE Group12_Certificate;
 Declare @CounterUser int = 1;
 Declare @minUserID int = -1;
 
-while @CounterUser <= 10 BEGIN
+while @CounterUser <= 1000 BEGIN
     Declare @CounterStrU varchar(20) = cast(@CounterUser as varchar);
     INSERT INTO Users VALUES
     ('User ' + @CounterStrU, 
     'user' + @CounterStrU + '@gmail.com', 
-     EncryptByKey(Key_GUID(N'Group12SymmetricKey'), 
+     EncryptByKey(Key_GUID(N'Group12_SymmetricKey'), 
     'password' +  @CounterStrU));
 
     DECLARE @UserIdU int = SCOPE_IDENTITY()
@@ -75,14 +77,16 @@ while @CounterUser <= 10 BEGIN
     SET @CounterUser += 1;
 END
 
+-- SELECT top 3 username, convert(varchar, DecryptByKey(encryptedPassword)) as 'Password' from Users;
+
 CLOSE SYMMETRIC KEY Group12_SymmetricKey;
-DROP SYMMETRIC KEY Group12_Certificate;
-DROP CERTIFICATE Group12Certificate;
-DROP MASTER KEY;
+-- DROP SYMMETRIC KEY Group12_Certificate;
+-- DROP CERTIFICATE Group12_Certificate;
+-- DROP MASTER KEY;
 
 --Location
 Declare @CounterLocation int = 1;
-while @CounterLocation <= 10 
+while @CounterLocation <= 100 
 BEGIN
 	Declare @LatitudeStr varchar(20) = cast(@CounterLocation as varchar);
 	Declare @LongtitudeStr varchar(20) = cast(@CounterLocation as varchar);
@@ -96,7 +100,7 @@ Declare @CounterM int = 1;
 Declare @UserIdM int;
 Declare @LocationIdM int;
 
-while @CounterM <= 300 BEGIN
+while @CounterM <= 3000 BEGIN
     Declare @CounterStrM varchar(20) = cast(@CounterM as varchar);
     Declare @rdateM DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2018-01-01');
     SELECT @UserIdM = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
@@ -122,7 +126,7 @@ END
 
 --Add Tags
 Declare @CounterT int = 1;
-while @CounterT <= 15 BEGIN
+while @CounterT <= 30 BEGIN
 	Declare @CounterStrTag varchar(20) = cast(@CounterT as varchar);
     INSERT INTO Tags VALUES
     ('Content ' +  @CounterStrTag);
@@ -134,7 +138,7 @@ Declare @cntMT int = 1;
 Declare @TagIdMT int;
 Declare @MediaIdMT int;
 
-while @cntMT <= 100 BEGIN
+while @cntMT <= 1000 BEGIN
 	SELECT @TagIdMT = (SELECT TOP 1 tag_id FROM [Tags] ORDER BY NEWID());
 	SELECT @MediaIdMT = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
     if not exists (select * from Media_Tags where media_id = @MediaIdMT and tag_id = @TagIdMT)
@@ -147,7 +151,7 @@ Declare @CounterLike int = 1;
 Declare @UserIdLike int;
 Declare @MediaIdLike int;
 
-while @CounterLike <= 1000 BEGIN
+while @CounterLike <= 10000 BEGIN
 	SELECT @MediaIdLike = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
 	SELECT @UserIdLike = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
     Declare @CtimeLike DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
@@ -161,7 +165,7 @@ Declare @CounterCom int = 1;
 Declare @UserIdCom int;
 Declare @MediaIdCom int;
 
-while @CounterCom <= 50 BEGIN
+while @CounterCom <= 500 BEGIN
 	SELECT @MediaIdCom = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
 	SELECT @UserIdCom = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
     Declare @CtimeCom DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
@@ -176,7 +180,7 @@ Declare @CounterView int = 1;
 Declare @UserIdView int;
 Declare @MediaIdView int;
 
-while @CounterView <= 400 BEGIN
+while @CounterView <= 10000 BEGIN
 	SELECT @MediaIdView = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
 	SELECT @UserIdView = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
     Declare @CtimeView DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
