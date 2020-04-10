@@ -287,7 +287,7 @@ FROM MediaCount
 -- Add Users, FollowInfo & BlockInfo
 Declare @CounterUser int = 1;
 
-while @CounterUser <= 12 BEGIN
+while @CounterUser <= 100 BEGIN
     Declare @CounterStrU varchar(20) = cast(@CounterUser as varchar);
     INSERT INTO Users VALUES
     ('User ' + @CounterStrU, 
@@ -300,11 +300,13 @@ while @CounterUser <= 12 BEGIN
     INSERT INTO UserCount VALUES(@UserIdU);
     INSERT INTO UserSettings VALUES(@UserIdU, 1, 0);
 
-    if (@CounterUser > 1)
-        Insert Into FollowInfo VALUES(@UserIdU, @UserIdU-1);
-    if (@CounterUser > 2)
-        Insert Into FollowInfo VALUES(@UserIdU, @UserIdU-2);
-    
+    DECLARE @UserFollower int = 0;
+    while rand() < 0.7 BEGIN
+        set @UserFollower = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
+        if not exists (Select * from FollowInfo where user_id = @UserIdU and follower_id = @UserFollower)
+            Insert into FollowInfo Values(@UserIdU, @UserFollower);
+    END
+
     if (@CounterUser != 1)
         Insert Into BlockInfo Values(@UserIdU, 1);
 
@@ -330,25 +332,25 @@ Declare @LocationIdM int;
 while @CounterM <= 30 BEGIN
     Declare @CounterStrM varchar(20) = cast(@CounterM as varchar);
     Declare @rdateM DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2018-01-01');
-    SELECT @UserIdM = u2.user_id FROM Users u2 WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
-    SELECT @LocationIdM = l.location_id FROM Location l WHERE l.location_id = Cast(RAND()*(12-1)+1 as int);
+    SELECT @UserIdM = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
+    SELECT @LocationIdM = (SELECT TOP 1 location_id FROM [Location] ORDER BY NEWID());
+    
     INSERT INTO Media VALUES
     (@rdateM, 
-    'text',@LocationIdM,
+    'text' + cast(@UserIdM as varchar),  @LocationIdM,
     @UserIdM);
 
-    SET @CounterM += 1;
-END 
-
---MediaCount
-Declare @CounterMC int = 1;
-Declare @MediaId int;
-
-while @CounterMC <= 30 BEGIN
-    SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = @CounterMC;
+    DECLARE @MediaId int = SCOPE_IDENTITY()
+    
+    if (rand() < 0.8)
+        INSERT  Into Photo VALUES (@MediaId, 'Photo URL for ' + @CounterStrM);
+    else
+        INSERT  Into Video VALUES (@MediaId, 'Resolution ' + @CounterStrM, 'Video URL for ' + @CounterStrM);
+    
     INSERT INTO MediaCount VALUES
     (@MediaId);
-    SET @CounterMC += 1;
+
+    SET @CounterM += 1;
 END 
 
 --Add Tags
@@ -366,54 +368,11 @@ Declare @TagIdMT int;
 Declare @MediaIdMT int;
 
 while @cntMT <= 10 BEGIN
-	SELECT @TagIdMT = t.tag_id FROM Tags t WHERE t.tag_id = Cast(RAND()*(15-1)+1 as int);
-	SELECT @MediaIdMT =m2.media_id FROM Media m2 WHERE m2.media_id = Cast(RAND()*(30-1)+1 as int);
+	SELECT @TagIdMT = (SELECT TOP 1 tag_id FROM [Tags] ORDER BY NEWID());
+	SELECT @MediaIdMT = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
 	INSERT INTO Media_Tags VALUES
     (@TagIdMT, @MediaIdMT);
 	SET @cntMT += 1;
-END
-
---Photo
-Declare @cntP int = 1;
-Declare @MediaIdP int;
-
-while @cntP <= 15 BEGIN
-	SELECT @MediaIdP =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
-	IF EXISTS (SELECT p.media_id FROM Photo p WHERE p.media_id = @MediaIdP) 
-	BEGIN
-		SET @cntP += 1;
-	END
-	ELSE
-	BEGIN
-	    Declare @MediaStrP varchar(20) = cast(@MediaIdP as varchar);
-		INSERT  Into Photo VALUES
-		(@MediaIdP, 'URL for ' + @MediaStrP);
-		SET @cntP += 1;
-	END
-END
-
---Video
-Declare @cntV int = 1;
-Declare @MediaIdV int;
-
-while @cntV <= 30 BEGIN
-	SELECT @MediaIdV =m.media_id FROM Media m WHERE m.media_id = @cntV;
-	IF EXISTS (SELECT v.media_id FROM Video v WHERE v.media_id = @MediaIdV) 
-	BEGIN
-		SET @cntV += 1;
-	END
-	ELSE IF EXISTS(SELECT p.media_id FROM Photo p WHERE p.media_id = @cntV)
-	BEGIN
-		SET @cntV += 1;
-	END
-	ELSE
-	BEGIN
-		Declare @MediaStrV varchar(20) = cast(@MediaIdV as varchar);
-		Declare @CntStrV varchar(20) = cast(@cntV as varchar);
-		INSERT  Into Video VALUES
-		(@MediaIdV,'Resolution ' + @CntStrV,'URL for ' + @MediaStrV);
-		SET @cntV += 1;
-	END
 END
 
 --Likes
@@ -422,8 +381,8 @@ Declare @UserIdLike int;
 Declare @MediaIdLike int;
 
 while @CounterLike <= 40 BEGIN
-	SELECT @MediaIdLike =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
-	SELECT @UserIdLike = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+	SELECT @MediaIdLike = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
+	SELECT @UserIdLike = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
     Declare @CtimeLike DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Likes VALUES
 	(@UserIdLike, @MediaIdLike,@CtimeLike);
@@ -436,11 +395,11 @@ Declare @UserIdCom int;
 Declare @MediaIdCom int;
 
 while @CounterCom <= 40 BEGIN
-	SELECT @MediaIdCom =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
-	SELECT @UserIdCom = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+	SELECT @MediaIdCom = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
+	SELECT @UserIdCom = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
     Declare @CtimeCom DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Comments VALUES
-	(@UserIdCom, @MediaIdCom,'text',@CtimeCom);
+	(@UserIdCom, @MediaIdCom, 'text', @CtimeCom);
 	SET @CounterCom += 1;
 END
 
@@ -450,9 +409,9 @@ Declare @CounterView int = 1;
 Declare @UserIdView int;
 Declare @MediaIdView int;
 
-while @CounterView <= 40 BEGIN
-	SELECT @MediaIdView =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
-	SELECT @UserIdView = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+while @CounterView <= 400 BEGIN
+	SELECT @MediaIdView = (SELECT TOP 1 media_id FROM [Media] ORDER BY NEWID());
+	SELECT @UserIdView = (SELECT TOP 1 user_id FROM Users ORDER BY NEWID());
     Declare @CtimeView DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Views VALUES
 	(@UserIdView, @MediaIdView,@CtimeView);
