@@ -1,13 +1,19 @@
-
-use Group12_Projects;
-drop database Group12_Project;
-
-create database Group12_Project;
-go
-
-use Group12_Project;
-GO
-
+DROP TABLE Video 
+DROP TABLE Photo 
+DROP TABLE Media_Tags 
+DROP TABLE Tags 
+DROP TABLE FollowInfo 
+DROP TABLE BlockInfo 
+DROP TABLE UserCount 
+DROP TABLE Comments 
+DROP TABLE Likes 
+DROP TABLE Views 
+DROP TABLE UserSettings 
+DROP TABLE Media
+DROP TABLE Users 
+DROP TABLE Location 
+DROP TABLE MediaCount 
+ 
 
 create table Users(
     user_id int IDENTITY primary Key,
@@ -223,170 +229,176 @@ DECRYPTION BY CERTIFICATE Group12Certificate;
 
 
 -- Add Users, FollowInfo & BlockInfo
-Declare @Counter int = 1;
+Declare @CounterUser int = 1;
 
-while @Counter <= 12 BEGIN
-    Declare @CounterStr varchar(20) = cast(@Counter as varchar);
+while @CounterUser <= 12 BEGIN
+    Declare @CounterStrU varchar(20) = cast(@CounterUser as varchar);
     INSERT INTO Users VALUES
-    ('User ' + @CounterStr, 
-    'user' + @CounterStr + '@gmail.com', 
+    ('User ' + @CounterStrU, 
+    'user' + @CounterStrU + '@gmail.com', 
      EncryptByKey(Key_GUID(N'Group12SymmetricKey'), 
-    'password' +  @CounterStr));
+    'password' +  @CounterStrU));
 
-    DECLARE @UserId int = SCOPE_IDENTITY()
+    DECLARE @UserIdU int = SCOPE_IDENTITY()
 
-    INSERT INTO UserCount VALUES(@UserId);
-    INSERT INTO UserSettings VALUES(@UserId, 1, 0);
+    INSERT INTO UserCount VALUES(@UserIdU);
+    INSERT INTO UserSettings VALUES(@UserIdU, 1, 0);
 
-    if (@Counter > 1)
-        Insert Into FollowInfo VALUES(@UserId, @UserId-1);
-    if (@Counter > 2)
-        Insert Into FollowInfo VALUES(@UserId, @UserId-2);
+    if (@CounterUser > 1)
+        Insert Into FollowInfo VALUES(@UserIdU, @UserIdU-1);
+    if (@CounterUser > 2)
+        Insert Into FollowInfo VALUES(@UserIdU, @UserIdU-2);
     
-    if (@Counter != 1)
-        Insert Into BlockInfo Values(@UserId, 1);
+    if (@CounterUser != 1)
+        Insert Into BlockInfo Values(@UserIdU, 1);
 
-    SET @Counter += 1;
+    SET @CounterUser += 1;
 END
-
-
---Add meida
-Declare @Counter int = 1;
-Declare @UserId int;
-Declare @LocationId int;
-Declare @MediaCountId int;
-
-while @Counter <= 30 BEGIN
-    Declare @CounterStr varchar(20) = cast(@Counter as varchar);
-    Declare @rdate DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2018-01-01');
-    SELECT @UserId = u2.user_id FROM Users u2 WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
-    SELECT @LocationId = l.location_id FROM Location l WHERE l.location_id = Cast(RAND()*(12-1)+1 as int);
-    SELECT @MediaCountId = mc.media_count_id FROM MediaCount mc WHERE mc.media_count_id  = Cast(RAND()*(12-1)+1 as int);
-    INSERT INTO Media VALUES
-    (@rdate, 
-      @MediaCountId,
-    'text',@LocationId,
-    @UserId);
-
-    SET @Counter += 1;
-END
-
---Add Tags
-Declare @Counter int = 1;
-while @Counter <= 15 BEGIN
-	Declare @CounterStr varchar(20) = cast(@Counter as varchar);
-    INSERT INTO Tags VALUES
-    ('Content ' +  @CounterStr);
-    SET @Counter += 1;
-END
-
-SELECT *
-FROM Tags t 
-
---Add Media_Tags
-Declare @cnt int = 1;
-Declare @TagId int;
-Declare @MediaId int;
-
-while @cnt <= 10 BEGIN
-	SELECT @TagId = t.tag_id FROM Tags t WHERE t.tag_id = Cast(RAND()*(15-1)+1 as int);
-	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
-	INSERT INTO Media_Tags VALUES
-    (@TagId, @MediaId);
-	SET @cnt += 1;
-END
---Photo
-Declare @cnt int = 1;
-Declare @MediaId int;
-
-while @cnt <= 10 BEGIN
-	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(15-1)+1 as int);
-	Declare @MediaStr varchar(20) = cast(@MediaId as varchar);
-	INSERT  Into Photo VALUES
-	(@MediaId, 'URL for ' + @MediaStr);
-	SET @cnt += 1;
-END
---Video
-Declare @cnt int = 1;
-Declare @MediaId int;
-
-while @cnt <= 10 BEGIN
-	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-16)+16 as int);
-	Declare @MediaStr varchar(20) = cast(@MediaId as varchar);
-	Declare @CntStr varchar(20) = cast(@cnt as varchar);
-	INSERT  Into Video VALUES
-	(@MediaId,'Resolution ' + @CntStr,'URL for ' + @MediaStr);
-	SET @cnt += 1;
-END
-
-   
-   
-   
 
 --Location
-Declare @Counter int = 1;
-while @Counter <= 10 
+Declare @CounterLocation int = 1;
+while @CounterLocation <= 10 
 BEGIN
-	Declare @LatitudeStr varchar(20) = cast(@Counter as varchar);
-	Declare @LongtitudeStr varchar(20) = cast(@Counter as varchar);
+	Declare @LatitudeStr varchar(20) = cast(@CounterLocation as varchar);
+	Declare @LongtitudeStr varchar(20) = cast(@CounterLocation as varchar);
     INSERT INTO Location VALUES( @LatitudeStr, @LongtitudeStr,'123pontius','sz');
-    SET @Counter += 1;
+    SET @CounterLocation += 1;
 END
 
 --MediaCount
 
-Declare @Counter int = 1;
-while @Counter <= 10 
+Declare @CounterMC int = 1;
+while @CounterMC <= 30 
 BEGIN
-    INSERT INTO MediaCount VALUES(@Counter,@Counter,@Counter );
-    SET @Counter += 1;
+    INSERT INTO MediaCount VALUES(@CounterMC,@CounterMC,@CounterMC );
+    SET @CounterMC += 1;
+END 
+
+--Add meida
+Declare @CounterM int = 1;
+Declare @UserIdM int;
+Declare @LocationIdM int;
+Declare @MediaCountIdM int;
+
+while @CounterM <= 30 BEGIN
+    Declare @CounterStrM varchar(20) = cast(@CounterM as varchar);
+    Declare @rdateM DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2018-01-01');
+    SELECT @UserIdM = u2.user_id FROM Users u2 WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    SELECT @LocationIdM = l.location_id FROM Location l WHERE l.location_id = Cast(RAND()*(12-1)+1 as int);
+    SELECT @MediaCountIdM = mc.media_count_id FROM MediaCount mc WHERE mc.media_count_id  = @CounterM;
+    INSERT INTO Media VALUES
+    (@rdateM, 
+      @MediaCountIdM,
+    'text',@LocationIdM,
+    @UserIdM);
+
+    SET @CounterM += 1;
+END 
+
+--Add Tags
+Declare @CounterT int = 1;
+while @CounterT <= 15 BEGIN
+	Declare @CounterStrTag varchar(20) = cast(@CounterT as varchar);
+    INSERT INTO Tags VALUES
+    ('Content ' +  @CounterStrTag);
+    SET @CounterT += 1;
+END 
+
+--Add Media_Tags
+Declare @cntMT int = 1;
+Declare @TagIdMT int;
+Declare @MediaIdMT int;
+
+while @cntMT <= 10 BEGIN
+	SELECT @TagIdMT = t.tag_id FROM Tags t WHERE t.tag_id = Cast(RAND()*(15-1)+1 as int);
+	SELECT @MediaIdMT =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-1)+1 as int);
+	INSERT INTO Media_Tags VALUES
+    (@TagIdMT, @MediaIdMT);
+	SET @cntMT += 1;
+END
+
+--Photo
+Declare @cntP int = 1;
+Declare @MediaIdP int;
+
+while @cntP <= 10 BEGIN
+	SELECT @MediaIdP =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(15-1)+1 as int);
+	IF EXISTS (SELECT p.media_id FROM Photo p WHERE p.media_id = @MediaIdP) 
+	BEGIN
+		SET @cntP += 1;
+	END
+	ELSE
+	BEGIN
+	    Declare @MediaStrP varchar(20) = cast(@MediaIdP as varchar);
+		INSERT  Into Photo VALUES
+		(@MediaIdP, 'URL for ' + @MediaStrP);
+		SET @cntP += 1;
+	END
+END
+
+--Video
+Declare @cntV int = 1;
+Declare @MediaIdV int;
+
+while @cntV <= 10 BEGIN
+	SELECT @MediaIdV =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(30-16)+16 as int);
+	IF EXISTS (SELECT v.media_id FROM Video v WHERE v.media_id = @MediaIdV) 
+	BEGIN
+		SET @cntV += 1;
+	END
+	ELSE
+	BEGIN
+		Declare @MediaStrV varchar(20) = cast(@MediaIdV as varchar);
+		Declare @CntStrV varchar(20) = cast(@cntV as varchar);
+		INSERT  Into Video VALUES
+		(@MediaIdV,'Resolution ' + @CntStrV,'URL for ' + @MediaStrV);
+		SET @cntV += 1;
+	END
 END
 
 --Likes
-Declare @Counter int = 1;
-Declare @UserId int;
-Declare @MediaId int;
+Declare @CounterLike int = 1;
+Declare @UserIdLike int;
+Declare @MediaIdLike int;
 
-while @Counter <= 10 BEGIN
-	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
-	SELECT @UserId = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
-    Declare @Ctime DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
+while @CounterLike <= 10 BEGIN
+	SELECT @MediaIdLike =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+	SELECT @UserIdLike = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    Declare @CtimeLike DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Likes VALUES
-	(@UserId, @MediaId,@Ctime);
-	SET @Counter += 1;
+	(@UserIdLike, @MediaIdLike,@CtimeLike);
+	SET @CounterLike += 1;
 END
 
 --Comments
+Declare @CounterCom int = 1;
+Declare @UserIdCom int;
+Declare @MediaIdCom int;
 
-
-Declare @Counter int = 1;
-Declare @UserId int;
-Declare @MediaId int;
-
-while @Counter <= 10 BEGIN
-	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
-	SELECT @UserId = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
-    Declare @Ctime DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
+while @CounterCom <= 10 BEGIN
+	SELECT @MediaIdCom =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+	SELECT @UserIdCom = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    Declare @CtimeCom DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Comments VALUES
-	(@UserId, @MediaId,'text',@Ctime);
-	SET @Counter += 1;
+	(@UserIdCom, @MediaIdCom,'text',@CtimeCom);
+	SET @CounterCom += 1;
 END
-
 
 --Views
 
-Declare @Counter int = 1;
-Declare @UserId int;
-Declare @MediaId int;
+Declare @CounterView int = 1;
+Declare @UserIdView int;
+Declare @MediaIdView int;
 
-while @Counter <= 10 BEGIN
-	SELECT @MediaId =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
-	SELECT @UserId = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
-    Declare @Ctime DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
+while @CounterView <= 10 BEGIN
+	SELECT @MediaIdView =m.media_id FROM Media m WHERE m.media_id = Cast(RAND()*(13-2)+1 as int);
+	SELECT @UserIdView = u2.user_id FROM Users u2  WHERE u2.user_id = Cast(RAND()*(12-1)+1 as int);
+    Declare @CtimeView DATE = DATEADD(DAY, ABS(CHECKSUM(NEWID()) % 31), '2020-02-02');
 	INSERT  Into Views VALUES
-	(@UserId, @MediaId,@Ctime);
-	SET @Counter += 1;
+	(@UserIdView, @MediaIdView,@CtimeView);
+	SET @CounterView += 1;
 END
+
 
 SELECT top 3 username, convert(varchar, DecryptByKey(encryptedPassword)) as 'Password' from Users;
 
