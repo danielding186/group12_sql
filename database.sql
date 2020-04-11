@@ -253,18 +253,4 @@ END;
 
 ALTER TABLE Media ADD CONSTRAINT BanBlockUsers CHECK (dbo.CheckBlockInfo(user_id) < 10);
 
---- create view
-drop view user_media;
-
-create view user_media as 
-select media_id, Users.username, text
-from Users
-join Media
-on Users.user_id = media.user_id;
-
-drop view [user_block];
-create view user_block as
-select b.fieldblocker_id as UserID, count(*) as BlockCount
-from BlockInfo b
-group by b.fieldblocker_id;
 
