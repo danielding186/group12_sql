@@ -24,15 +24,15 @@ SELECT top 3 username, convert(varchar, DecryptByKey(encryptedPassword)) as 'Pas
 
 CLOSE SYMMETRIC KEY Group12_SymmetricKey;
 
-select count(*) from UserCount;
 
-select count(*) from FollowInfo;
-
-select count(*) from BlockInfo;
-
-select count(*) from Media;
-
-select dbo.CheckBlockInfo(1) as blocker;
+SELECT  a.name AS [TABLE NAME] ,
+        b.rows AS [RECORD COUNT]
+FROM    sysobjects AS a
+        INNER JOIN sysindexes AS b ON a.id = b.id
+WHERE   ( a.type = 'u' )
+        AND ( b.indid IN ( 0, 1 ) )
+ORDER BY a.name ,
+        b.rows DESC
 
 select top 10 * from MediaCount order by like_counts desc;
 
@@ -53,6 +53,22 @@ select top 10 * from MediaCount order by like_counts desc;
 select location_id, count(*) as [count] from Media group by location_id order by location_id;
 
 select * from [Location];
+
+
+select top 3 Media.media_id, count(*) as [CommentCount]
+from Media 
+join Comments
+on Media.media_id = Comments.media_id
+group by Media.media_id
+order by count(*) desc;
+
+
+select top 3 Media.media_id, count(*) as [LikeCount]
+from Media 
+join Likes
+on Media.media_id = Comments.media_id
+group by Media.media_id
+order by count(*) desc;
 
 
 go
